@@ -16,56 +16,55 @@ from sklearn.metrics    import accuracy_score, mean_absolute_error, mean_squared
 
 
 def main():
-    # ── 1. Load ───────────────────────────────────────────────────────────────
+    # 1. Load 
     print('\n' + '='*60)
     print('STEP 1 — Load Data')
     print('='*60)
     movies, ratings, links, credits, keywords = load_data(data_dir='data')
 
-    # ── 2. Clean ──────────────────────────────────────────────────────────────
+    # 2. Clean
     print('\n' + '='*60)
     print('STEP 2 — Clean Movies')
     print('='*60)
     movies = clean_movies(movies)
 
-    # ── 3. Parse genres ───────────────────────────────────────────────────────
+    #  3. Parse genres 
     print('\n' + '='*60)
     print('STEP 3 — Parse Genres')
     print('='*60)
     movies = parse_genres(movies)
 
-    # ── 4. Parse credits & keywords ───────────────────────────────────────────
+    #  4. Parse credits & keywords 
     print('\n' + '='*60)
     print('STEP 4 — Parse Credits & Keywords')
     print('='*60)
     movies = parse_credits_keywords(movies, credits, keywords)
 
-    # ── 5. Merge ──────────────────────────────────────────────────────────────
+    #  5. Merge 
     print('\n' + '='*60)
     print('STEP 5 — Merge Ratings + Links + Movies')
     print('='*60)
     df, links = merge_all(movies, ratings, links)
 
-    # ── 6. EDA ────────────────────────────────────────────────────────────────
+    #  6. EDA 
     print('\n' + '='*60)
     print('STEP 6 — EDA')
     print('='*60)
     run_eda(df, ratings)
     run_genre_avg_rating(df)
 
-    # ── 7. Weighted Score ─────────────────────────────────────────────────────
-    print('\n' + '='*60)
+    # 7. Weighted Score 
     print('STEP 7 — Weighted Score (IMDB Formula)')
     print('='*60)
     compute_weighted_score(movies)
 
-    # ── 8. Feature Engineering ────────────────────────────────────────────────
+    #  8. Feature Engineering 
     print('\n' + '='*60)
     print('STEP 8 — Feature Engineering')
     print('='*60)
     X_train, X_test, y_train, y_test, feature_cols = build_features(df)
 
-    # ── 9. Models ─────────────────────────────────────────────────────────────
+    #  9. Models 
     print('\n' + '='*60)
     print('STEP 9 — Baseline')
     print('='*60)
@@ -95,7 +94,7 @@ def main():
                    dt_preds, dt_train_preds,
                    nb_preds, nb_train_preds)
 
-    # ── 10. Content-Based ─────────────────────────────────────────────────────
+    #  10. Content-Based 
     print('\n' + '='*60)
     print('STEP 14 — Content-Based Filtering')
     print('='*60)
@@ -106,7 +105,7 @@ def main():
     print('\nContent-Based Recommendations for Toy Story:')
     print(content_recommend('Toy Story', tfidf_matrix, content, indices).to_string())
 
-    # ── 11. SVD Collaborative ─────────────────────────────────────────────────
+    # 11. SVD Collaborative 
     print('\n' + '='*60)
     print('STEP 15 — SVD Collaborative Filtering')
     print('='*60)
@@ -123,7 +122,7 @@ def main():
                                   movie_ids_lookup, user_item_sparse, global_mean,
                                   links, movies).to_string())
 
-    # ── 12. Hybrid ────────────────────────────────────────────────────────────
+    #  12. Hybrid 
     print('\n' + '='*60)
     print('STEP 16 — Hybrid Recommender')
     print('='*60)
@@ -145,8 +144,7 @@ def main():
                            tfidf_matrix, content, indices,
                            user_factors, item_factors,
                            user_pos, movie_ids_lookup, global_mean, links).to_string())
-
-    # ── 13. Save Models ───────────────────────────────────────────────────────
+## 13 Models save
     print('\n' + '='*60)
     print('STEP 17 — Save Models')
     print('='*60)
@@ -156,7 +154,7 @@ def main():
              movie_ids_lookup, user_item_sparse, global_mean,
              models_dir='models')
 
-    # ── Final Summary ─────────────────────────────────────────────────────────
+    #  Final Summary 
     print('\n' + '-'*60)
     print('      MOVIE RECOMMENDATION SYSTEM — COMPLETE')
     print('-'*60)

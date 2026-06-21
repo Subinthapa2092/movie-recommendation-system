@@ -5,7 +5,7 @@ import numpy as np
 import scipy.sparse as sp
 
 
-# ── paths ────────────────────────────────────────────────────────────────────
+#  paths 
 
 MODELS_DIR = 'models'
 
@@ -15,8 +15,7 @@ def _path(filename, models_dir=MODELS_DIR):
     return os.path.join(models_dir, filename)
 
 
-# ── classification models (.pkl) ────────────────────────────────────────────
-
+#  classification models (.pkl)
 def save_classifiers(lr, dt, nb, feature_cols, models_dir=MODELS_DIR):
     """Save the three trained classifiers + the feature column list."""
     with open(_path('logistic_regression.pkl', models_dir), 'wb') as f:
@@ -49,7 +48,7 @@ def load_classifiers(models_dir=MODELS_DIR):
     return lr, dt, nb, feature_cols
 
 
-# ── content-based model (.pkl) ──────────────────────────────────────────────
+#  content-based model (.pkl) 
 
 def save_content_model(tfidf_matrix, content, indices, models_dir=MODELS_DIR):
     """Save the TF-IDF matrix (sparse), content table, and title->index lookup."""
@@ -78,7 +77,7 @@ def load_content_model(models_dir=MODELS_DIR):
     return tfidf_matrix, content, indices
 
 
-# ── SVD collaborative model (.npz + .pkl) ───────────────────────────────────
+#  SVD collaborative model (.npz + .pkl) 
 
 def save_svd_model(user_factors, item_factors, user_pos, movie_pos,
                     movie_ids_lookup, user_item_sparse, global_mean,
@@ -124,7 +123,7 @@ def load_svd_model(models_dir=MODELS_DIR):
             movie_ids_lookup, user_item_sparse, global_mean)
 
 
-# ── convenience: save / load everything in one call ─────────────────────────
+#  convenience: save / load everything in one call
 
 def save_all(lr, dt, nb, feature_cols,
              tfidf_matrix, content, indices,
