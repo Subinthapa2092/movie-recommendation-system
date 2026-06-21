@@ -11,6 +11,7 @@ from src.models         import (run_baseline, run_logistic, run_decision_tree,
 from src.content_based  import build_content_model, content_recommend
 from src.collaborative  import build_svd_model, collaborative_recommend
 from src.hybrid         import hybrid_recommend
+from src.persistence    import save_all
 from sklearn.metrics    import accuracy_score, mean_absolute_error, mean_squared_error
 
 
@@ -144,6 +145,16 @@ def main():
                            tfidf_matrix, content, indices,
                            user_factors, item_factors,
                            user_pos, movie_ids_lookup, global_mean, links).to_string())
+
+    # ── 13. Save Models ───────────────────────────────────────────────────────
+    print('\n' + '='*60)
+    print('STEP 17 — Save Models')
+    print('='*60)
+    save_all(lr, dt, nb, feature_cols,
+             tfidf_matrix, content, indices,
+             user_factors, item_factors, user_pos, movie_pos,
+             movie_ids_lookup, user_item_sparse, global_mean,
+             models_dir='models')
 
     # ── Final Summary ─────────────────────────────────────────────────────────
     print('\n' + '-'*60)
