@@ -28,6 +28,3 @@ datasets/
 # OS Files
 .DS_Store
 Thumbs.db
-# data
-models/*.pkl
-models/*.npz
