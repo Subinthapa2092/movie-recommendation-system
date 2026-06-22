@@ -138,7 +138,12 @@ def save_all(lr, dt, nb, feature_cols,
 
 
 def load_all(models_dir=MODELS_DIR):
-    lr, dt, nb, feature_cols = load_classifiers(models_dir)
+    # Classifiers are optional — web app only needs recommenders
+    try:
+        lr, dt, nb, feature_cols = load_classifiers(models_dir)
+    except Exception:
+        lr = dt = nb = feature_cols = None
+
     tfidf_matrix, content, indices = load_content_model(models_dir)
     (user_factors, item_factors, user_pos, movie_pos,
      movie_ids_lookup, user_item_sparse, global_mean) = load_svd_model(models_dir)
