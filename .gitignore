@@ -17,12 +17,10 @@ env/
 .env
 
 # Data Files (optional)
-data/
 datasets/
 
 # Large Files
 *.zip
-*.csv
 *.xlsx
 
 # OS Files
