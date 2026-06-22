@@ -142,9 +142,17 @@ def load_all(models_dir=MODELS_DIR):
     except Exception:
         lr = dt = nb = feature_cols = None
 
-    tfidf_matrix, content, indices = load_content_model(models_dir)
-    (user_factors, item_factors, user_pos, movie_pos,
-     movie_ids_lookup, user_item_sparse, global_mean) = load_svd_model(models_dir)
+    try:
+        tfidf_matrix, content, indices = load_content_model(models_dir)
+    except Exception:
+        tfidf_matrix = content = indices = None
+
+    try:
+        (user_factors, item_factors, user_pos, movie_pos,
+         movie_ids_lookup, user_item_sparse, global_mean) = load_svd_model(models_dir)
+    except Exception:
+        user_factors = item_factors = user_pos = movie_pos = None
+        movie_ids_lookup = user_item_sparse = global_mean = None
 
     return {
         'lr': lr, 'dt': dt, 'nb': nb, 'feature_cols': feature_cols,
@@ -154,3 +162,4 @@ def load_all(models_dir=MODELS_DIR):
         'movie_ids_lookup': movie_ids_lookup,
         'user_item_sparse': user_item_sparse, 'global_mean': global_mean,
     }
+
