@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+LABEL org.opencontainers.image.title="CineMatch Dashboard"
+LABEL org.opencontainers.image.description="Movie Recommendation System — Streamlit analytics dashboard"
+LABEL org.opencontainers.image.authors="Subin Thapa"
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY src/        ./src/
+COPY dashboard/  ./dashboard/
+COPY models/     ./models/
+
+RUN useradd -m -u 1000 appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8501
+
+ENV MODELS_DIR=/app/models
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Disable Streamlit's browser-open and telemetry
+CMD ["streamlit", "run", "dashboard/dashboard.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--browser.gatherUsageStats=false", \
+     "--server.headless=true"]

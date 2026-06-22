@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CineMatch — Movie Recommendation System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:         #0d0f14;
+    --surface:    #14171f;
+    --surface2:   #1c2030;
+    --border:     #252940;
+    --accent:     #e8b14f;
+    --accent2:    #7c6af5;
+    --text:       #e4e6f0;
+    --muted:      #6b7099;
+    --danger:     #e85c5c;
+    --success:    #5ce89a;
+    --radius:     12px;
+    --gap:        24px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 var(--gap);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--text); font-style: italic; }
+  nav { display: flex; gap: 8px; }
+  nav button {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font: 500 0.85rem 'Inter', sans-serif;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  nav button:hover, nav button.active {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface2);
+  }
+  nav button.active { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Layout ── */
+  main { max-width: 1100px; margin: 0 auto; padding: var(--gap); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 64px 0 48px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+  .hero h1 em { color: var(--accent); font-style: italic; }
+  .hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto 40px;
+  }
+
+  /* ── Method tabs ── */
+  .method-tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .method-tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font: 500 0.85rem 'Inter', sans-serif;
+    padding: 8px 20px;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .method-tab:hover { border-color: var(--accent); color: var(--text); }
+  .method-tab.active {
+    background: var(--accent);
+    color: #0d0f14;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    max-width: 640px;
+    margin: 0 auto 40px;
+  }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font: 0.95rem 'Inter', sans-serif;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* Autocomplete */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 200;
+    display: none;
+  }
+  .autocomplete-list.show { display: block; }
+  .autocomplete-list li {
+    list-style: none;
+    padding: 9px 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .autocomplete-list li:hover, .autocomplete-list li.selected {
+    background: var(--border);
+    color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #0d0f14;
+    font: 600 0.95rem 'Inter', sans-serif;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Results ── */
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .results-header h3 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; }
+  .badge {
+    font: 500 0.75rem 'JetBrains Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .badge.content  { color: #7c6af5; border-color: #7c6af5; }
+  .badge.collab   { color: #5ce89a; border-color: #5ce89a; }
+  .badge.hybrid   { color: #e8b14f; border-color: #e8b14f; }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .movie-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: fadeUp 0.3s ease both;
+  }
+  .movie-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .movie-card:nth-child(1)  { animation-delay: 0.00s; }
+  .movie-card:nth-child(2)  { animation-delay: 0.04s; }
+  .movie-card:nth-child(3)  { animation-delay: 0.08s; }
+  .movie-card:nth-child(4)  { animation-delay: 0.12s; }
+  .movie-card:nth-child(5)  { animation-delay: 0.16s; }
+  .movie-card:nth-child(6)  { animation-delay: 0.20s; }
+  .movie-card:nth-child(7)  { animation-delay: 0.24s; }
+  .movie-card:nth-child(8)  { animation-delay: 0.28s; }
+  .movie-card:nth-child(9)  { animation-delay: 0.32s; }
+  .movie-card:nth-child(10) { animation-delay: 0.36s; }
+
+  .card-rank {
+    font: 500 0.72rem 'JetBrains Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .card-genres {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-score {
+    font: 600 0.8rem 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+  .score-bar-wrap { background: var(--bg); border-radius: 4px; height: 4px; margin-top: 6px; }
+  .score-bar { height: 4px; border-radius: 4px; background: var(--accent); transition: width 0.6s ease; }
+
+  /* ── Loading / Error ── */
+  .spinner {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .spinner.show { display: block; }
+  .spinner::before {
+    content: '';
+    display: block;
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    display: none;
+    background: rgba(232,92,92,0.08);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+  .error-msg.show { display: block; }
+
+  /* ── Dashboard page ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .arch-section h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 24px;
+  }
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .arch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .arch-card h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .arch-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .dot-purple { background: var(--accent2); }
+  .dot-green  { background: var(--success); }
+  .dot-gold   { background: var(--accent); }
+
+  /* ── About page ── */
+  .about-section { max-width: 720px; }
+  .about-section h2 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; margin-bottom: 12px; }
+  .about-section p  { color: var(--muted); margin-bottom: 20px; line-height: 1.8; }
+  .tech-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tech-pill {
+    font: 500 0.8rem 'JetBrains Mono', monospace;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Cine<span>Match</span></div>
+  <nav>
+    <button class="active" onclick="showPage('recommend', this)">Recommend</button>
+    <button onclick="showPage('dashboard', this)">Dashboard</button>
+    <button onclick="showPage('about', this)">About</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── Recommend Page ── -->
+  <div id="page-recommend" class="page active">
+    <div class="hero">
+      <h1>Find your next<br/><em>favourite film</em></h1>
+      <p>Three recommendation engines — content similarity, user behaviour, or a blend of both.</p>
+    </div>
+
+    <div class="method-tabs">
+      <button class="method-tab active" onclick="setMethod('content', this)">Content-Based</button>
+      <button class="method-tab" onclick="setMethod('collaborative', this)">Collaborative (SVD)</button>
+      <button class="method-tab" onclick="setMethod('hybrid', this)">Hybrid</button>
+    </div>
+
+    <!-- Content form -->
+    <div class="form-card" id="form-content">
+      <div class="form-group">
+        <label>Movie title</label>
+        <div class="autocomplete-wrap">
+          <input id="ct-title" type="text" placeholder="e.g. The Dark Knight" autocomplete="off"
+                 oninput="autocomplete(this, 'ct-list')" onkeydown="acKeydown(event, 'ct-list', 'ct-title')"/>
+          <ul id="ct-list" class="autocomplete-list"></ul>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Number of results</label>
+        <input id="ct-n" type="number" value="10" min="1" max="50"/>
+      </div>
+      <div class="error-msg" id="ct-error"></div>
+      <button class="btn-primary" onclick="runContent()">Find similar movies</button>
+    </div>
+
+    <!-- Collaborative form -->
+    <div class="form-card" id="form-collaborative" style="display:none">
+      <div class="form-group">
+        <label>User ID</label>
+        <input id="col-user" type="number" value="1" min="1"/>
+      </div>
+      <div class="form-group">
+        <label>Number of results</label>
+        <input id="col-n" type="number" value="10" min="1" max="50"/>
+      </div>
+      <div class="error-msg" id="col-error"></div>
+      <button class="btn-primary" onclick="runCollaborative()">Get personalised picks</button>
+    </div>
+
+    <!-- Hybrid form -->
+    <div class="form-card" id="form-hybrid" style="display:none">
+      <div class="form-group">
+        <label>Movie title</label>
+        <div class="autocomplete-wrap">
+          <input id="hy-title" type="text" placeholder="e.g. Inception" autocomplete="off"
+                 oninput="autocomplete(this, 'hy-list')" onkeydown="acKeydown(event, 'hy-list', 'hy-title')"/>
+          <ul id="hy-list" class="autocomplete-list"></ul>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>User ID</label>
+          <input id="hy-user" type="number" value="1" min="1"/>
+        </div>
+        <div class="form-group">
+          <label>Results</label>
+          <input id="hy-n" type="number" value="10" min="1" max="50"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Content weight (0–1)</label>
+          <input id="hy-wc" type="number" value="0.6" min="0" max="1" step="0.1"/>
+        </div>
+        <div class="form-group">
+          <label>Collab weight (0–1)</label>
+          <input id="hy-wl" type="number" value="0.4" min="0" max="1" step="0.1"/>
+        </div>
+      </div>
+      <div class="error-msg" id="hy-error"></div>
+      <button class="btn-primary" onclick="runHybrid()">Get hybrid recommendations</button>
+    </div>
+
+    <!-- Spinner + Results -->
+    <div class="spinner" id="spinner">Finding recommendations...</div>
+    <div id="results-area"></div>
+  </div>
+
+  <!-- ── Dashboard Page ── -->
+  <div id="page-dashboard" class="page">
+    <div class="hero" style="padding-bottom:24px">
+      <h1>System <em>Dashboard</em></h1>
+      <p>Live stats from the loaded models.</p>
+    </div>
+
+    <div class="dash-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Movies indexed</div><div class="stat-value" id="stat-movies">—</div></div>
+      <div class="stat-card"><div class="stat-label">Known users</div><div class="stat-value" id="stat-users">—</div></div>
+      <div class="stat-card"><div class="stat-label">SVD factors</div><div class="stat-value" id="stat-svd">—</div></div>
+      <div class="stat-card"><div class="stat-label">TF-IDF vocab</div><div class="stat-value" id="stat-vocab">—</div></div>
+    </div>
+
+    <div class="arch-section">
+      <h2>How it works</h2>
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h4><span class="dot dot-purple"></span>Content-Based</h4>
+          <p>Builds a TF-IDF vector from each movie's genres, overview, director, cast, and keywords. Ranks candidates by cosine similarity to the query movie.</p>
+        </div>
+        <div class="arch-card">
+          <h4><span class="dot dot-green"></span>Collaborative (SVD)</h4>
+          <p>Decomposes the 671-user × 45,000-movie rating matrix into 50 latent factors using TruncatedSVD. Predicts unseen ratings and surfaces the highest-scoring unrated movies for a given user.</p>
+        </div>
+        <div class="arch-card">
+          <h4><span class="dot dot-gold"></span>Hybrid</h4>
+          <p>Weighted blend of normalised content similarity and normalised SVD collaborative score. Default weights: 60% content + 40% collaborative.</p>
+        </div>
+        <div class="arch-card">
+          <h4>📊 Classification Models</h4>
+          <p>Logistic Regression, Decision Tree, and Naive Bayes predict whether a user will "like" a movie (rating ≥ 4.0). Features: vote average, vote count, popularity, and genre one-hot encoding.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── About Page ── -->
+  <div id="page-about" class="page">
+    <div class="about-section" style="padding-top:48px">
+      <h2>About this project</h2>
+      <p>An end-to-end movie recommendation system built on The Movies Dataset (Kaggle, rounakbanik). The pipeline covers data cleaning, exploratory analysis, classification modelling, and three recommendation engines.</p>
+      <p>Built by <strong>Subin Thapa</strong> as a BDS project at Tribhuvan University, Nepal.</p>
+      <div class="tech-pills">
+        <span class="tech-pill">Python</span>
+        <span class="tech-pill">FastAPI</span>
+        <span class="tech-pill">scikit-learn</span>
+        <span class="tech-pill">TruncatedSVD</span>
+        <span class="tech-pill">TF-IDF</span>
+        <span class="tech-pill">pandas</span>
+        <span class="tech-pill">NumPy</span>
+        <span class="tech-pill">SciPy</span>
+        <span class="tech-pill">Docker</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API = '';  // same-origin; change to 'http://localhost:8000' for local dev
+let allTitles = [];
+let currentMethod = 'content';
+
+// ── Page nav ──────────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'dashboard') loadStats();
+}
+
+// ── Method switcher ───────────────────────────────────────────────────────────
+function setMethod(m, btn) {
+  currentMethod = m;
+  document.querySelectorAll('.method-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('form-content').style.display      = m === 'content'       ? '' : 'none';
+  document.getElementById('form-collaborative').style.display= m === 'collaborative' ? '' : 'none';
+  document.getElementById('form-hybrid').style.display       = m === 'hybrid'        ? '' : 'none';
+  document.getElementById('results-area').innerHTML = '';
+}
+
+// ── Autocomplete ──────────────────────────────────────────────────────────────
+async function fetchTitles() {
+  if (allTitles.length) return;
+  try {
+    const r = await fetch(API + '/api/movies');
+    const d = await r.json();
+    allTitles = d.titles || [];
+  } catch(e) {}
+}
+
+async function autocomplete(input, listId) {
+  await fetchTitles();
+  const q = input.value.trim().toLowerCase();
+  const list = document.getElementById(listId);
+  if (!q) { list.classList.remove('show'); return; }
+  const hits = allTitles.filter(t => t.toLowerCase().includes(q)).slice(0, 20);
+  if (!hits.length) { list.classList.remove('show'); return; }
+  list.innerHTML = hits.map(t => `<li onclick="selectTitle('${t.replace(/'/g,"\\'")}', '${input.id}', '${listId}')">${t}</li>`).join('');
+  list.classList.add('show');
+}
+
+function selectTitle(title, inputId, listId) {
+  document.getElementById(inputId).value = title;
+  document.getElementById(listId).classList.remove('show');
+}
+
+function acKeydown(e, listId, inputId) {
+  const list = document.getElementById(listId);
+  const items = list.querySelectorAll('li');
+  let sel = list.querySelector('li.selected');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (sel) { sel.classList.remove('selected'); sel = sel.nextElementSibling || items[0]; }
+    else sel = items[0];
+    if (sel) sel.classList.add('selected');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (sel) { sel.classList.remove('selected'); sel = sel.previousElementSibling || items[items.length-1]; }
+    else sel = items[items.length-1];
+    if (sel) sel.classList.add('selected');
+  } else if (e.key === 'Enter') {
+    if (sel) { selectTitle(sel.textContent, inputId, listId); e.preventDefault(); }
+  } else if (e.key === 'Escape') {
+    list.classList.remove('show');
+  }
+}
+
+document.addEventListener('click', e => {
+  document.querySelectorAll('.autocomplete-list').forEach(l => {
+    if (!l.previousElementSibling?.contains(e.target)) l.classList.remove('show');
+  });
+});
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+function showSpinner(show) {
+  document.getElementById('spinner').classList.toggle('show', show);
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+async function postRecommend(endpoint, body) {
+  showSpinner(true);
+  document.getElementById('results-area').innerHTML = '';
+  try {
+    const r = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Request failed');
+    return d;
+  } finally {
+    showSpinner(false);
+  }
+}
+
+async function runContent() {
+  showError('ct-error', '');
+  const title = document.getElementById('ct-title').value.trim();
+  const n     = parseInt(document.getElementById('ct-n').value) || 10;
+  if (!title) { showError('ct-error', 'Please enter a movie title.'); return; }
+  try {
+    const data = await postRecommend('/api/recommend/content', { title, n });
+    renderResults(data, 'content');
+  } catch(e) { showError('ct-error', e.message); }
+}
+
+async function runCollaborative() {
+  showError('col-error', '');
+  const user_id = parseInt(document.getElementById('col-user').value) || 1;
+  const n       = parseInt(document.getElementById('col-n').value) || 10;
+  try {
+    const data = await postRecommend('/api/recommend/collaborative', { user_id, n });
+    renderResults(data, 'collaborative');
+  } catch(e) { showError('col-error', e.message); }
+}
+
+async function runHybrid() {
+  showError('hy-error', '');
+  const title    = document.getElementById('hy-title').value.trim();
+  const user_id  = parseInt(document.getElementById('hy-user').value) || 1;
+  const n        = parseInt(document.getElementById('hy-n').value) || 10;
+  const w_content= parseFloat(document.getElementById('hy-wc').value) || 0.6;
+  const w_collab = parseFloat(document.getElementById('hy-wl').value) || 0.4;
+  if (!title) { showError('hy-error', 'Please enter a movie title.'); return; }
+  try {
+    const data = await postRecommend('/api/recommend/hybrid', { title, user_id, n, w_content, w_collab });
+    renderResults(data, 'hybrid');
+  } catch(e) { showError('hy-error', e.message); }
+}
+
+// ── Render results ────────────────────────────────────────────────────────────
+function renderResults(data, method) {
+  const area = document.getElementById('results-area');
+  const badgeClass = { content: 'content', 'collaborative-svd': 'collab', hybrid: 'hybrid' }[data.method] || '';
+  const maxScore = Math.max(...data.results.map(r => r.score || 0)) || 1;
+
+  const cards = data.results.map((r, i) => {
+    const score    = r.score != null ? r.score.toFixed(4) : '—';
+    const pct      = r.score != null ? Math.round((r.score / maxScore) * 100) : 0;
+    const genres   = r.genre_str?.replace(/_/g,' ') || 'Unknown genre';
+    const title    = r.title || 'Untitled';
+    return `
+      <div class="movie-card">
+        <div class="card-rank">#${String(i+1).padStart(2,'0')}</div>
+        <div class="card-title">${title}</div>
+        <div class="card-genres">${genres}</div>
+        <div class="card-score">Score: ${score}</div>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div class="results-header">
+      <h3>Recommendations</h3>
+      <span class="badge ${badgeClass}">${data.method}</span>
+    </div>
+    <div class="results-grid">${cards}</div>`;
+}
+
+// ── Dashboard stats ───────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const r = await fetch(API + '/api/stats');
+    const d = await r.json();
+    document.getElementById('stat-movies').textContent = d.total_movies?.toLocaleString() ?? '—';
+    document.getElementById('stat-users').textContent  = d.total_users?.toLocaleString()  ?? '—';
+    document.getElementById('stat-svd').textContent    = d.svd_components ?? '—';
+    document.getElementById('stat-vocab').textContent  = d.vocab_size?.toLocaleString()   ?? '—';
+  } catch(e) {
+    document.getElementById('stat-movies').textContent = 'API offline';
+  }
+}
+</script>
+</body>
+</html>
