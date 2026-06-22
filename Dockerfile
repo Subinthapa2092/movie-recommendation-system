@@ -29,14 +29,12 @@ COPY frontend/   ./frontend/
 COPY models/     ./models/
 # data/ is mounted as a volume in docker-compose.
 # Copy here only as fallback for standalone docker run.
-COPY data/       ./data/
 
 RUN useradd -m -u 1000 appuser && chown -R appuser /app
 USER appuser
 
 EXPOSE 8000
 
-ENV MODELS_DIR=/app/models
 ENV DATA_DIR=/app/data
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
