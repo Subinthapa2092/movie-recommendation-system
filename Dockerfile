@@ -20,6 +20,7 @@ LABEL org.opencontainers.image.description="Movie Recommendation System — Fast
 LABEL org.opencontainers.image.authors="Subin Thapa"
 
 WORKDIR /app
+ARG CACHEBUST=20260622095456
 
 COPY --from=builder /install /usr/local
 
