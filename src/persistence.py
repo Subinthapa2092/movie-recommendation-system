@@ -106,7 +106,17 @@ def save_svd_model(user_factors, item_factors, user_pos, movie_pos,
 
 def load_svd_model(models_dir=MODELS_DIR):
     """Load SVD factors/sparse matrix + id<->index lookups."""
-    npz = np.load(_path('svd_factors.npz', models_dir), allow_pickle=True)
+    npz_path = _path('svd_factors.npz', models_dir)
+    part1 = _path('svd_factors.part1', models_dir)
+    part2 = _path('svd_factors.part2', models_dir)
+
+    # Reassemble from parts if needed
+    if not os.path.exists(npz_path) and os.path.exists(part1):
+        with open(npz_path, 'wb') as out:
+            with open(part1, 'rb') as f: out.write(f.read())
+            with open(part2, 'rb') as f: out.write(f.read())
+
+    npz = np.load(npz_path, allow_pickle=True)
     user_factors = npz['user_factors']
     item_factors = npz['item_factors']
     movie_ids_lookup = npz['movie_ids_lookup']
@@ -121,7 +131,6 @@ def load_svd_model(models_dir=MODELS_DIR):
 
     return (user_factors, item_factors, user_pos, movie_pos,
             movie_ids_lookup, user_item_sparse, global_mean)
-
 
 #  convenience: save / load everything in one call
 
