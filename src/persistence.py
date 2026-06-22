@@ -136,9 +136,7 @@ def save_all(lr, dt, nb, feature_cols,
                    movie_ids_lookup, user_item_sparse, global_mean, models_dir)
     print('\nAll models saved to', os.path.abspath(models_dir))
 
-
 def load_all(models_dir=MODELS_DIR):
-    # Classifiers are optional — web app only needs recommenders
     try:
         lr, dt, nb, feature_cols = load_classifiers(models_dir)
     except Exception:
